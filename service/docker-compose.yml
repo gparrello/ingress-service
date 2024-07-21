@@ -1,5 +1,43 @@
 services:
-  test:
-    image: busybox:latest
-    container_name: test-service
-    command: sh -c "while true; do echo 'hello world'; sleep 300; done"
+
+  duckdns:
+    image: lscr.io/linuxserver/duckdns:latest
+    container_name: ingress-duckdns
+    restart: unless-stopped
+    environment:
+      - TOKEN
+      - SUBDOMAINS=karpincho
+      - LOG_FILE=false
+    volumes:
+      - duckdns_data:/config
+
+  caddy:
+    container_name: ingress-caddy
+    image: lucaslorentz/caddy-docker-proxy:ci-alpine
+    ports:
+      - 2080:80
+      - 2443:443
+    environment:
+      - UID=1100
+      - GID=1100
+      - CADDY_INGRESS_NETWORKS=ingress
+    networks:
+      - ingress
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - caddy_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: curl -sS http://127.0.0.1:80 || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  default:
+    name: ingress
+    attachable: true
+
+volumes:
+  caddy_data: {}
+  duckdns_data: {}
