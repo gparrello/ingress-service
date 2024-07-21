@@ -22,7 +22,7 @@ services:
       - GID=1100
       - CADDY_INGRESS_NETWORKS=ingress
     networks:
-      - ingress
+      - default
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - caddy_data:/data
